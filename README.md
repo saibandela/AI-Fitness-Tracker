@@ -1,4 +1,4 @@
-# AI Fitness Tracker
+# 🏋️ AI Fitness Tracker
 
 A machine learning-powered web application that delivers real-time calorie burn predictions to help users make data-driven fitness decisions.
 
