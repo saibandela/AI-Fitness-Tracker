@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Fitness Tracker</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            font-weight: bold;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 0.95em;
+            line-height: 1.5;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+            font-size: 0.95em;
+        }
+
+        input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: #f8f9fa;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input::placeholder {
+            color: #aaa;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 10px;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:active {
+            transform: translateY(0);
+        }
+
+        .result-container {
+            margin-top: 30px;
+            padding: 30px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 15px;
+            text-align: center;
+            animation: slideIn 0.5s ease;
+        }
+
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-label {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+            font-weight: 600;
+        }
+
+        .result-value {
+            color: white;
+            font-size: 3.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .result-unit {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.2em;
+            margin-left: 5px;
+        }
+
+        .result-description {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.85em;
+            margin-top: 10px;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI Fitness Tracker</h1>
+        <p class="subtitle">
+            Enter your workout details and let our Machine Learning model predict your calories burned.
+        </p>
+
+        <form id="fitnessForm" method="POST" action="/predict">
+            <div class="form-group">
+                <label for="age">Age (years)</label>
+                <input type="number" id="age" name="age" placeholder="e.g., 25" required step="0.1">
+            </div>
+
+            <div class="form-group">
+                <label for="weight">Weight (kg)</label>
+                <input type="number" id="weight" name="weight" placeholder="e.g., 70" required step="0.1">
+            </div>
+
+            <div class="form-group">
+                <label for="heart_rate">Avg Heart Rate (bpm)</label>
+                <input type="number" id="heart_rate" name="heart_rate" placeholder="e.g., 140" required step="0.1">
+            </div>
+
+            <div class="form-group">
+                <label for="duration">Workout Duration (mins)</label>
+                <input type="number" id="duration" name="duration" placeholder="e.g., 45" required step="0.1">
+            </div>
+
+            <button type="submit" class="submit-btn">Predict Calories Burned</button>
+        </form>
+
+        <!-- Result Section (Hidden by default) -->
+        <div id="resultContainer" class="result-container hidden">
+            <div class="result-label">AI ESTIMATE</div>
+            <div>
+                <span class="result-value" id="calorieValue">0</span>
+                <span class="result-unit">kcal</span>
+            </div>
+            <div class="result-description">Based on your metrics and session duration.</div>
+        </div>
+    </div>
+
+    <script>
+        // Handle form submission
+        document.getElementById('fitnessForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(this);
+            const data = {
+                age: parseFloat(formData.get('age')),
+                weight: parseFloat(formData.get('weight')),
+                heart_rate: parseFloat(formData.get('heart_rate')),
+                duration: parseFloat(formData.get('duration'))
+            };
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(data)
+                });
+
+                const result = await response.json();
+                
+                // Display the result
+                document.getElementById('calorieValue').textContent = Math.round(result.calories);
+                document.getElementById('resultContainer').classList.remove('hidden');
+                
+                // Scroll to result
+                document.getElementById('resultContainer').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                
+            } catch (error) {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            }
+        });
+    </script>
+</body>
+</html>
